@@ -1,0 +1,33 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <%= link_to t('navbar.app_name'), root_path, class:"navbar-brand" %>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <%= link_to "Admin", home_admin_path, class:"nav-link" %>
+        </li>
+      </ul>
+
+      <div class="d-flex align-items-center gap-3">
+        <!-- Language selector -->
+        <div class="dropdown">
+          <button class="btn btn-outline-light dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            🌐 <%= I18n.locale == :en ? "English" : "Français" %>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+            <li><%= link_to "English", switch_locale_path(:en), class: "dropdown-item" %></li>
+            <li><%= link_to "Français", switch_locale_path(:fr), class: "dropdown-item" %></li>
+          </ul>
+        </div>
+
+        <!-- Auth buttons -->
+        <button class="btn btn-outline-success" type="button">Login</button>
+        <button class="btn btn-success" type="button">Register</button>
+      </div>
+    </div>
+  </div>
+</nav>

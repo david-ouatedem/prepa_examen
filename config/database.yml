@@ -13,8 +13,8 @@ production:
   primary: &primary_production
     <<: *default
     database: prepa_examen_production
-    username: prepa_examen
-    password: <%= ENV["PREPA_EXAMEN_DATABASE_PASSWORD"] %>
+    username: <%= ENV["PGUSER"] %>
+    password: <%= ENV["PGPASSWORD"] %>
   cache:
     <<: *primary_production
     database: prepa_examen_production_cache

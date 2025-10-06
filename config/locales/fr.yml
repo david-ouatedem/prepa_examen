@@ -1,0 +1,8 @@
+fr:
+  hello: "Bonjour"
+  navbar:
+    app_name: "Prepa-Examen"
+    admin: "Admin"
+    language: "Langue"
+    english: "Anglais"
+    french: "Français"
