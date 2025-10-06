@@ -6,11 +6,11 @@
 
 <div id="exams">
   <% @exams.each do |exam| %>
-    <%= render exam %>
+    <%= render "exam", exam: exam %>
     <p>
-      <%= link_to "Show this exam", exam %>
+      <%= link_to "Show this exam", admin_exam_path(exam) %>
     </p>
   <% end %>
 </div>
 
-<%= link_to "New exam", new_exam_path %>
+<%= link_to "New exam", new_admin_exam_path %>
