@@ -1,0 +1,13 @@
+<nav class="mb-3">
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <%= link_to t('admin_nav.exams'), admin_exams_path, class: "nav-link #{admin_nav_active_class(:exams)}" %>
+    </li>
+    <li class="nav-item">
+      <%= link_to t('admin_nav.specialities'), "", class: "nav-link #{admin_nav_active_class(:specialities)}" %>
+    </li>
+    <li class="nav-item">
+      <%= link_to t('admin_nav.subjects'), "", class: "nav-link #{admin_nav_active_class(:subjects)}" %>
+    </li>
+  </ul>
+</nav>

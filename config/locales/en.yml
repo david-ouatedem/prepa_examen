@@ -6,3 +6,7 @@ en:
     language: "Language"
     english: "English"
     french: "French"
+  admin_nav:
+    exams: "Exams"
+    specialities: "Specialities"
+    subjects: "Subjects"

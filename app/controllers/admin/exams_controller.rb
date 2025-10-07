@@ -1,5 +1,5 @@
 module Admin
-  class ExamsController < ApplicationController
+  class ExamsController < Admin::BaseController
     before_action :set_exam, only: %i[ show edit update destroy ]
 
     # GET /exams or /exams.json
