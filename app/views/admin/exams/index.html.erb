@@ -1,16 +1,239 @@
-<p style="color: green"><%= notice %></p>
+<% content_for :title, t('exams.title') %>
 
-<% content_for :title, "Exams" %>
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><%= t('exams.title') %></h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#examModal" onclick="clearExamForm()">
+      <i class="bi bi-plus-circle"></i> <%= t('exams.new_exam') %>
+    </button>
+  </div>
 
-<h1>Exams</h1>
+  <div id="alertContainer">
+    <% if notice.present? %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= notice %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% end %>
+  </div>
 
-<div id="exams">
-  <% @exams.each do |exam| %>
-    <%= render "exam", exam: exam %>
-    <p>
-      <%= link_to "Show this exam", admin_exam_path(exam) %>
-    </p>
-  <% end %>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle" id="examsTable">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" style="width: 25%"><%= t('exams.label') %></th>
+              <th scope="col" style="width: 55%"><%= t('exams.description') %></th>
+              <th scope="col" class="text-end" style="width: 20%"><%= t('exams.actions') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if @exams.any? %>
+              <% @exams.each do |exam| %>
+                <tr id="<%= dom_id exam %>">
+                  <td><strong><%= exam.label %></strong></td>
+                  <td><%= exam.description %></td>
+                  <td class="text-end">
+                    <div class="btn-group btn-group-sm d-flex gap-2" role="group">
+                      <button type="button" class="btn btn-outline-primary" 
+                              data-bs-toggle="modal" 
+                              data-bs-target="#examModal"
+                              data-exam-id="<%= exam.id %>"
+                              data-exam-label="<%= exam.label %>"
+                              data-exam-description="<%= exam.description %>"
+                              onclick="editExam(this)">
+                        <i class="bi bi-pencil"></i> <%= t('exams.edit') %>
+                      </button>
+                      <button type="button" class="btn btn-outline-danger" 
+                              onclick="confirmDelete('<%= exam.id %>', '<%= j exam.label %>')">
+                        <i class="bi bi-trash"></i> <%= t('exams.delete') %>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr id="emptyState">
+                <td colspan="3" class="text-center text-muted py-5">
+                  <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                  <p class="mt-3 mb-0"><%= t('exams.no_exams') %></p>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
-<%= link_to "New exam", new_admin_exam_path %>
+<!-- Exam Modal -->
+<div class="modal fade" id="examModal" tabindex="-1" aria-labelledby="examModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="examForm" onsubmit="handleSubmit(event)">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <div class="modal-header">
+          <h5 class="modal-title" id="examModalLabel"><%= t('exams.new_exam') %></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="examErrors" class="alert alert-danger d-none" role="alert">
+            <h6 class="alert-heading"><%= t('errors.messages.fix_errors', default: 'Please fix the following errors:') %></h6>
+            <ul id="examErrorsList" class="mb-0"></ul>
+          </div>
+
+          <div class="mb-3">
+            <label for="exam_label" class="form-label"><%= t('exams.label') %></label>
+            <input type="text" class="form-control" id="exam_label" name="exam[label]" placeholder="<%= t('exams.label') %>">
+          </div>
+
+          <div class="mb-3">
+            <label for="exam_description" class="form-label"><%= t('exams.description') %></label>
+            <textarea class="form-control" id="exam_description" name="exam[description]" rows="4" placeholder="<%= t('exams.description') %>"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('exams.cancel') %></button>
+          <button type="submit" class="btn btn-primary" id="submitBtn"><%= t('exams.save') %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteModalLabel"><%= t('exams.delete') %></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><%= t('exams.confirm_delete') %> <strong id="deleteExamLabel"></strong> ?</p>
+        <p class="text-muted mb-0"><%= t('exams.confirm_delete_text') %></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('exams.cancel') %></button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="deleteExam()"><%= t('exams.delete') %></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let examModalInstance;
+  let deleteModalInstance;
+  let currentExamId = null;
+  let currentDeleteId = null;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    examModalInstance = new bootstrap.Modal(document.getElementById('examModal'));
+    deleteModalInstance = new bootstrap.Modal(document.getElementById('deleteModal'));
+  });
+
+  function clearExamForm() {
+    const form = document.getElementById('examForm');
+    form.reset();
+    currentExamId = null;
+    document.getElementById('examModalLabel').textContent = '<%= t('exams.new_exam') %>';
+    document.getElementById('examErrors').classList.add('d-none');
+  }
+
+  function editExam(button) {
+    const id = button.dataset.examId;
+    const label = button.dataset.examLabel;
+    const description = button.dataset.examDescription;
+    
+    currentExamId = id;
+    document.getElementById('examModalLabel').textContent = '<%= t('exams.edit') %>';
+    document.getElementById('exam_label').value = label;
+    document.getElementById('exam_description').value = description;
+    document.getElementById('examErrors').classList.add('d-none');
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('examForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const formData = new FormData(form);
+    
+    const url = currentExamId ? `/admin/exams/${currentExamId}` : '/admin/exams';
+    const method = currentExamId ? 'PATCH' : 'POST';
+    
+    // Disable submit button
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span><%= t('exams.saving') %>';
+    
+    fetch(url, {
+      method: method,
+      headers: {
+        'X-CSRF-Token': document.querySelector('input[name="authenticity_token"]').value,
+        'Accept': 'application/json'
+      },
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.errors) {
+        // Show errors
+        const errorsList = document.getElementById('examErrorsList');
+        errorsList.innerHTML = '';
+        Object.values(data.errors).flat().forEach(error => {
+          errorsList.innerHTML += `<li>${error}</li>`;
+        });
+        document.getElementById('examErrors').classList.remove('d-none');
+        
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.textContent = '<%= t('exams.save') %>';
+      } else {
+        // Success - reload the page to refresh the table
+        window.location.reload();
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = '<%= t('exams.save') %>';
+    });
+  }
+
+  function confirmDelete(id, label) {
+    currentDeleteId = id;
+    document.getElementById('deleteExamLabel').textContent = label;
+    deleteModalInstance.show();
+  }
+
+  function deleteExam() {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span><%= t('exams.deleting') %>';
+    
+    fetch(`/admin/exams/${currentDeleteId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': document.querySelector('input[name="authenticity_token"]').value,
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Success - reload the page to refresh the table
+        window.location.reload();
+      } else {
+        throw new Error('Delete failed');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = '<%= t('exams.delete') %>';
+    });
+  }
+</script>
