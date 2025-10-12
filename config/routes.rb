@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   root "home#index"
   namespace :admin do
     resources :exams
+    resources :specialities
     root to: "exams#index"
   end
   get "up" => "rails/health#show", as: :rails_health_check
