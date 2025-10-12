@@ -1,0 +1,254 @@
+<% content_for :title, t('specialities.title') %>
+
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><%= t('specialities.title') %></h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#specialityModal" onclick="clearSpecialityForm()">
+      <i class="bi bi-plus-circle"></i> <%= t('specialities.new_speciality') %>
+    </button>
+  </div>
+
+  <div id="alertContainer">
+    <% if notice.present? %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= notice %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle" id="specialitiesTable">
+          <thead class="table-light">
+          <tr>
+            <th scope="col" style="width: 20%"><%= t('specialities.label') %></th>
+            <th scope="col" style="width: 40%"><%= t('specialities.description') %></th>
+            <th scope="col" style="width: 20%"><%= t('specialities.exam') %></th>
+            <th scope="col" class="text-end" style="width: 20%"><%= t('specialities.actions') %></th>
+          </tr>
+          </thead>
+          <tbody>
+          <% if @specialities.any? %>
+            <% @specialities.each do |speciality| %>
+              <tr id="<%= dom_id speciality %>">
+                <td><strong><%= speciality.label %></strong></td>
+                <td><%= speciality.description %></td>
+                <td><%= speciality.exam&.label || '-' %></td>
+                <td class="text-end">
+                  <div class="d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-outline-primary btn-sm"
+                            data-bs-toggle="modal"
+                            data-bs-target="#specialityModal"
+                            data-speciality-id="<%= speciality.id %>"
+                            data-speciality-label="<%= speciality.label %>"
+                            data-speciality-description="<%= speciality.description %>"
+                            data-speciality-exam-id="<%= speciality.exam_id %>"
+                            onclick="editSpeciality(this)">
+                      <i class="bi bi-pencil"></i> <%= t('specialities.edit') %>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm"
+                            onclick="confirmDelete('<%= speciality.id %>', '<%= j speciality.label %>')">
+                      <i class="bi bi-trash"></i> <%= t('specialities.delete') %>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr id="emptyState">
+              <td colspan="4" class="text-center text-muted py-5">
+                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                <p class="mt-3 mb-0"><%= t('specialities.no_specialities') %></p>
+              </td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Speciality Modal -->
+<div class="modal fade" id="specialityModal" tabindex="-1" aria-labelledby="specialityModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="specialityForm" onsubmit="handleSubmit(event)">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <div class="modal-header">
+          <h5 class="modal-title" id="specialityModalLabel"><%= t('specialities.new_speciality') %></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="specialityErrors" class="alert alert-danger d-none" role="alert">
+            <h6 class="alert-heading"><%= t('errors.messages.fix_errors', default: 'Please fix the following errors:') %></h6>
+            <ul id="specialityErrorsList" class="mb-0"></ul>
+          </div>
+
+          <div class="mb-3">
+            <label for="speciality_label" class="form-label"><%= t('specialities.label') %></label>
+            <input type="text" class="form-control" id="speciality_label" name="speciality[label]" placeholder="<%= t('specialities.label') %>">
+          </div>
+
+          <div class="mb-3">
+            <label for="speciality_description" class="form-label"><%= t('specialities.description') %></label>
+            <textarea class="form-control" id="speciality_description" name="speciality[description]" rows="4" placeholder="<%= t('specialities.description') %>"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="speciality_exam_id" class="form-label"><%= t('specialities.exam') %></label>
+            <select class="form-select" id="speciality_exam_id" name="speciality[exam_id]">
+              <option value=""><%= t('specialities.select_exam') %></option>
+              <% @exams.each do |exam| %>
+                <option value="<%= exam.id %>"><%= exam.label %></option>
+              <% end %>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('specialities.cancel') %></button>
+          <button type="submit" class="btn btn-primary" id="submitBtn"><%= t('specialities.save') %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteModalLabel"><%= t('specialities.delete') %></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><%= t('specialities.confirm_delete') %> <strong id="deleteSpecialityLabel"></strong>?</p>
+        <p class="text-muted mb-0"><%= t('specialities.confirm_delete_text') %></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('specialities.cancel') %></button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="deleteSpeciality()"><%= t('specialities.delete') %></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    let specialityModalInstance;
+    let deleteModalInstance;
+    let currentSpecialityId = null;
+    let currentDeleteId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        specialityModalInstance = new bootstrap.Modal(document.getElementById('specialityModal'));
+        deleteModalInstance = new bootstrap.Modal(document.getElementById('deleteModal'));
+    });
+
+    function clearSpecialityForm() {
+        const form = document.getElementById('specialityForm');
+        form.reset();
+        currentSpecialityId = null;
+        document.getElementById('specialityModalLabel').textContent = '<%= t('specialities.new_speciality') %>';
+        document.getElementById('specialityErrors').classList.add('d-none');
+    }
+
+    function editSpeciality(button) {
+        const id = button.dataset.specialityId;
+        const label = button.dataset.specialityLabel;
+        const description = button.dataset.specialityDescription;
+        const examId = button.dataset.specialityExamId;
+
+        currentSpecialityId = id;
+        document.getElementById('specialityModalLabel').textContent = '<%= t('specialities.edit') %>';
+        document.getElementById('speciality_label').value = label;
+        document.getElementById('speciality_description').value = description;
+        document.getElementById('speciality_exam_id').value = examId || '';
+        document.getElementById('specialityErrors').classList.add('d-none');
+    }
+
+    function handleSubmit(event) {
+        event.preventDefault();
+
+        const form = document.getElementById('specialityForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const formData = new FormData(form);
+
+        const url = currentSpecialityId ? `/admin/specialities/${currentSpecialityId}` : '/admin/specialities';
+        const method = currentSpecialityId ? 'PATCH' : 'POST';
+
+        // Disable submit button
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span><%= t('specialities.saving') %>';
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'X-CSRF-Token': document.querySelector('input[name="authenticity_token"]').value,
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.errors) {
+                    // Show errors
+                    const errorsList = document.getElementById('specialityErrorsList');
+                    errorsList.innerHTML = '';
+                    Object.values(data.errors).flat().forEach(error => {
+                        errorsList.innerHTML += `<li>${error}</li>`;
+                    });
+                    document.getElementById('specialityErrors').classList.remove('d-none');
+
+                    // Re-enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '<%= t('specialities.save') %>';
+                } else {
+                    // Success - reload the page to refresh the table
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '<%= t('specialities.save') %>';
+            });
+    }
+
+    function confirmDelete(id, label) {
+        currentDeleteId = id;
+        document.getElementById('deleteSpecialityLabel').textContent = label;
+        deleteModalInstance.show();
+    }
+
+    function deleteSpeciality() {
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span><%= t('specialities.deleting') %>';
+
+        fetch(`/admin/specialities/${currentDeleteId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-Token': document.querySelector('input[name="authenticity_token"]').value,
+                'Accept': 'application/json'
+            }
+        })
+            .then(response => {
+                if (response.ok) {
+                    // Success - reload the page to refresh the table
+                    window.location.reload();
+                } else {
+                    throw new Error('Delete failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = '<%= t('specialities.delete') %>';
+            });
+    }
+</script>
