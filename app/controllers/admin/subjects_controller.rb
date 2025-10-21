@@ -48,9 +48,19 @@ module Admin
     end
 
     def destroy
-      @subject.destroy
-      redirect_to admin_subjects_path, notice: "Subject was successfully destroyed."
+      if @subject.destroy
+        respond_to do |format|
+          format.html { redirect_to admin_subjects_path, notice: "Subject was successfully destroyed." }
+          format.json { head :no_content }
+        end
+      else
+        respond_to do |format|
+          format.html { redirect_to admin_subjects_path, alert: "Failed to destroy subject." }
+          format.json { render json: @subject.errors, status: :unprocessable_entity }
+        end
+      end
     end
+
 
     private
 
@@ -59,7 +69,7 @@ module Admin
     end
 
     def subject_params
-      params.require(:subject).permit(:label, :description, :year, speciality_ids: [])
+      params.require(:subject).permit(:label, :description, :year, :file, speciality_ids: [])
     end
   end
 end
