@@ -1,0 +1,273 @@
+<% content_for :title, t('subjects.title') %>
+
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><%= t('subjects.title') %></h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#subjectModal" onclick="clearSubjectForm()">
+      <i class="bi bi-plus-circle"></i> <%= t('subjects.new_subject') %>
+    </button>
+  </div>
+
+  <div id="alertContainer">
+    <% if notice.present? %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= notice %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle" id="subjectsTable">
+          <thead class="table-light">
+          <tr>
+            <th scope="col" style="width: 20%"><%= t('subjects.label') %></th>
+            <th scope="col" style="width: 40%"><%= t('subjects.description') %></th>
+            <th scope="col" style="width: 10%"><%= t('subjects.year') %></th>
+            <th scope="col" style="width: 20%"><%= t('subjects.specialities') %></th>
+            <th scope="col" class="text-end" style="width: 10%"><%= t('subjects.actions') %></th>
+          </tr>
+          </thead>
+          <tbody>
+          <% if @subjects.any? %>
+            <% @subjects.each do |subject| %>
+              <tr id="<%= dom_id subject %>">
+                <td><strong><%= subject.label %></strong></td>
+                <td><%= subject.description %></td>
+                <td><%= subject.year %></td>
+                <td>
+                  <% if subject.specialities.any? %>
+                    <%= subject.specialities.map(&:label).join(', ') %>
+                  <% else %>
+                    -
+                  <% end %>
+                </td>
+                <td class="text-end">
+                  <div class="d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-outline-primary btn-sm"
+                            data-bs-toggle="modal"
+                            data-bs-target="#subjectModal"
+                            data-subject-id="<%= subject.id %>"
+                            data-subject-label="<%= subject.label %>"
+                            data-subject-description="<%= subject.description %>"
+                            data-subject-year="<%= subject.year %>"
+                            data-subject-speciality-ids="<%= subject.speciality_ids.join(',') %>"
+                            onclick="editSubject(this)">
+                      <i class="bi bi-pencil"></i> <%= t('subjects.edit') %>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm"
+                            onclick="confirmSubjectDelete('<%= subject.id %>', '<%= j subject.label %>')">
+                      <i class="bi bi-trash"></i> <%= t('subjects.delete') %>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr id="emptyState">
+              <td colspan="5" class="text-center text-muted py-5">
+                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                <p class="mt-3 mb-0"><%= t('subjects.no_subjects') %></p>
+              </td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Subject Modal -->
+<div class="modal fade" id="subjectModal" tabindex="-1" aria-labelledby="subjectModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="subjectForm" onsubmit="handleSubjectSubmit(event)">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <div class="modal-header">
+          <h5 class="modal-title" id="subjectModalLabel"><%= t('subjects.new_subject') %></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="subjectErrors" class="alert alert-danger d-none" role="alert">
+            <h6 class="alert-heading"><%= t('errors.messages.fix_errors', default: 'Please fix the following errors:') %></h6>
+            <ul id="subjectErrorsList" class="mb-0"></ul>
+          </div>
+
+          <div class="mb-3">
+            <label for="subject_label" class="form-label"><%= t('subjects.label') %></label>
+            <input type="text" class="form-control" id="subject_label" name="subject[label]" placeholder="<%= t('subjects.label') %>">
+          </div>
+
+          <div class="mb-3">
+            <label for="subject_description" class="form-label"><%= t('subjects.description') %></label>
+            <textarea class="form-control" id="subject_description" name="subject[description]" rows="3" placeholder="<%= t('subjects.description') %>"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="subject_year" class="form-label"><%= t('subjects.year') %></label>
+            <input type="number" class="form-control" id="subject_year" name="subject[year]" placeholder="2025">
+          </div>
+
+          <div class="mb-3">
+            <label for="subject_speciality_ids" class="form-label"><%= t('subjects.specialities') %></label>
+            <select class="form-select" id="subject_speciality_ids" name="subject[speciality_ids][]" multiple>
+              <% @specialities.each do |speciality| %>
+                <option value="<%= speciality.id %>"><%= speciality.label %></option>
+              <% end %>
+            </select>
+            <small class="text-muted"><%= t('subjects.multiple_select_hint', default: 'Hold Ctrl or Cmd to select multiple') %></small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('subjects.cancel') %></button>
+          <button type="submit" class="btn btn-primary" id="submitSubjectBtn"><%= t('subjects.save') %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="subjectDeleteModal" tabindex="-1" aria-labelledby="subjectDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="subjectDeleteModalLabel"><%= t('subjects.delete') %></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><%= t('subjects.confirm_delete') %> <strong id="deleteSubjectLabel"></strong>?</p>
+        <p class="text-muted mb-0"><%= t('subjects.confirm_delete_text') %></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('subjects.cancel') %></button>
+        <button type="button" class="btn btn-danger" id="confirmSubjectDeleteBtn" onclick="deleteSubject()"><%= t('subjects.delete') %></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    let subjectModalInstance;
+    let deleteSubjectModalInstance;
+    let currentSubjectId = null;
+    let currentDeleteSubjectId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        subjectModalInstance = new bootstrap.Modal(document.getElementById('subjectModal'));
+        deleteSubjectModalInstance = new bootstrap.Modal(document.getElementById('subjectDeleteModal'));
+    });
+
+    function clearSubjectForm() {
+        const form = document.getElementById('subjectForm');
+        form.reset();
+        currentSubjectId = null;
+        document.getElementById('subjectModalLabel').textContent = '<%= t('subjects.new_subject') %>';
+        document.getElementById('subjectErrors').classList.add('d-none');
+    }
+
+    function editSubject(button) {
+        const id = button.dataset.subjectId;
+        const label = button.dataset.subjectLabel;
+        const description = button.dataset.subjectDescription;
+        const year = button.dataset.subjectYear;
+        const specialityIds = button.dataset.subjectSpecialityIds.split(',');
+
+        currentSubjectId = id;
+        document.getElementById('subjectModalLabel').textContent = '<%= t('subjects.edit') %>';
+        document.getElementById('subject_label').value = label;
+        document.getElementById('subject_description').value = description;
+        document.getElementById('subject_year').value = year;
+
+        const select = document.getElementById('subject_speciality_ids');
+        [...select.options].forEach(opt => {
+            opt.selected = specialityIds.includes(opt.value);
+        });
+
+        document.getElementById('subjectErrors').classList.add('d-none');
+    }
+
+    function handleSubjectSubmit(event) {
+        event.preventDefault();
+
+        const form = document.getElementById('subjectForm');
+        const submitBtn = document.getElementById('submitSubjectBtn');
+        const formData = new FormData(form);
+
+        const url = currentSubjectId ? `/admin/subjects/${currentSubjectId}` : '/admin/subjects';
+        const method = currentSubjectId ? 'PATCH' : 'POST';
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span><%= t('subjects.saving') %>';
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'X-CSRF-Token': document.querySelector('input[name="authenticity_token"]').value,
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+            .then(async response => {
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw data;
+                return data;
+            })
+            .then(data => {
+                if (data.errors) {
+                    const errorsList = document.getElementById('subjectErrorsList');
+                    errorsList.innerHTML = '';
+                    Object.values(data.errors).flat().forEach(error => {
+                        errorsList.innerHTML += `<li>${error}</li>`;
+                    });
+                    document.getElementById('subjectErrors').classList.remove('d-none');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '<%= t('subjects.save') %>';
+                } else {
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '<%= t('subjects.save') %>';
+            });
+    }
+
+    function confirmSubjectDelete(id, label) {
+        currentDeleteSubjectId = id;
+        document.getElementById('deleteSubjectLabel').textContent = label;
+        deleteSubjectModalInstance.show();
+    }
+
+    function deleteSubject() {
+        const confirmBtn = document.getElementById('confirmSubjectDeleteBtn');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span><%= t('subjects.deleting') %>';
+
+        fetch(`/admin/subjects/${currentDeleteSubjectId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-Token': document.querySelector('input[name="authenticity_token"]').value,
+                'Accept': 'application/json'
+            }
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    throw new Error('Delete failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = '<%= t('subjects.delete') %>';
+            });
+    }
+</script>
