@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   root "home#index"
   namespace :admin do
+    resources :subjects
     resources :exams
     resources :specialities
     root to: "exams#index"
