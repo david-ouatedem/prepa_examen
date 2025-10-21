@@ -27,6 +27,7 @@
             <th scope="col" style="width: 40%"><%= t('subjects.description') %></th>
             <th scope="col" style="width: 10%"><%= t('subjects.year') %></th>
             <th scope="col" style="width: 20%"><%= t('subjects.specialities') %></th>
+            <th scope="col" style="width: 10%"><%= t('subjects.file') %></th>
             <th scope="col" class="text-end" style="width: 10%"><%= t('subjects.actions') %></th>
           </tr>
           </thead>
@@ -42,6 +43,16 @@
                     <%= subject.specialities.map(&:label).join(', ') %>
                   <% else %>
                     -
+                  <% end %>
+                </td>
+                <td>
+                  <% if subject.file.attached? %>
+                    <%= link_to t('subjects.view_file', default: 'View PDF'),
+                                rails_blob_path(subject.file, disposition: "inline"),
+                                target: "_blank",
+                                class: "btn btn-sm btn-outline-secondary" %>
+                  <% else %>
+                    <span class="text-muted">—</span>
                   <% end %>
                 </td>
                 <td class="text-end">
@@ -120,6 +131,24 @@
             </select>
             <small class="text-muted"><%= t('subjects.multiple_select_hint', default: 'Hold Ctrl or Cmd to select multiple') %></small>
           </div>
+
+          <div class="mb-3">
+            <label for="subject_file" class="form-label"><%= t('subjects.file') %> (PDF)</label>
+            <input type="file"
+                   class="form-control"
+                   id="subject_file"
+                   name="subject[file]"
+                   accept="application/pdf">
+            <small class="text-muted"><%= t('subjects.pdf_hint', default: 'Only PDF files are allowed (max 10MB)') %></small>
+          </div>
+
+          <% if @subject&.file&.attached? %>
+            <p class="mt-2 text-muted">
+              <i class="bi bi-file-earmark-pdf"></i>
+              <%= @subject.file.filename %>
+            </p>
+          <% end %>
+
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('subjects.cancel') %></button>

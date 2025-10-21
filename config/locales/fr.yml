@@ -66,3 +66,6 @@ fr:
     select_specialities: "Sélectionnez les spécialités"
     confirm_delete: "Êtes-vous sûr de vouloir supprimer cette matière"
     confirm_delete_text: "Cette action est irréversible."
+    file: "Fichier d'examen"
+    view_file: "Voir le PDF"
+    pdf_hint: "Seuls les fichiers PDF sont autorisés (max 10 Mo)"
