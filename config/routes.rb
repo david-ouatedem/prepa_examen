@@ -6,6 +6,10 @@ Rails.application.routes.draw do
     resources :specialities
     root to: "exams#index"
   end
+  namespace :api do
+    resources :specialities, only: [:index]
+    resources :subjects, only: [:index]
+  end
   get "up" => "rails/health#show", as: :rails_health_check
   get 'locale/:locale', to: 'locale#switch', as: :switch_locale
 end

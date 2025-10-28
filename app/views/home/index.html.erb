@@ -1,1 +1,145 @@
-<h1>Home Page</h1>
+<!-- Hero Section -->
+<section class="hero text-center py-5 bg-light">
+  <h1 class="display-5 fw-bold mb-3">Prépa Examens</h1>
+  <p class="lead text-muted mb-4">
+    Trouvez et téléchargez facilement vos sujets d'examen par spécialité et année.
+  </p>
+</section>
+
+<!-- Filter Section -->
+<section class="container my-4">
+  <div class="row g-3 align-items-end">
+    <div class="col-md-5">
+      <label for="examSelect" class="form-label">Examen</label>
+      <select id="examSelect" class="form-select">
+        <option value="">-- Sélectionnez un examen --</option>
+        <% @exams.each do |exam| %>
+          <option value="<%= exam.id %>"><%= exam.label %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <div class="col-md-5">
+      <label for="specialitySelect" class="form-label">Spécialité</label>
+      <select id="specialitySelect" class="form-select" disabled>
+        <option value="">-- Sélectionnez une spécialité --</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <button id="searchBtn" class="btn btn-primary w-100">Rechercher</button>
+    </div>
+  </div>
+</section>
+
+<!-- Subjects Section -->
+<section class="subjects container my-4" id="subjectsList">
+  <% if @subjects.any? %>
+    <div class="row">
+      <% @subjects.each do |subject| %>
+        <div class="col-md-4 mb-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title"><%= subject.label %></h5>
+              <p class="card-text text-muted"><%= subject.description %></p>
+
+              <div class="d-flex justify-content-between">
+                <% if subject.file.attached? %>
+                  <%= link_to "Voir le PDF",
+                              rails_blob_path(subject.file, disposition: "inline"),
+                              target: "_blank",
+                              rel: "noopener noreferrer",
+                              class: "btn btn-outline-secondary btn-sm" %>
+                  <%= link_to "Télécharger",
+                              rails_blob_path(subject.file, disposition: "attachment"),
+                              class: "btn btn-primary btn-sm" %>
+                <% else %>
+                  <button class="btn btn-secondary btn-sm w-100" disabled>PDF indisponible</button>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-center text-muted mt-5">Aucun sujet trouvé pour cette sélection.</p>
+  <% end %>
+</section>
+
+<!-- Script -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const examSelect = document.getElementById("examSelect");
+        const specialitySelect = document.getElementById("specialitySelect");
+        const searchBtn = document.getElementById("searchBtn");
+        const subjectsList = document.getElementById("subjectsList");
+
+        // 🔹 Load specialities dynamically when exam changes
+        examSelect.addEventListener("change", async () => {
+            const examId = examSelect.value;
+            specialitySelect.innerHTML = '<option value="">-- Choisir une spécialité --</option>';
+            specialitySelect.disabled = true;
+
+            if (!examId) return;
+
+            try {
+                const res = await fetch(`/api/specialities.json?exam_id=${examId}`);
+                const data = await res.json();
+
+                if (data.length) {
+                    data.forEach(s => {
+                        specialitySelect.innerHTML += `<option value="${s.id}">${s.label}</option>`;
+                    });
+                    specialitySelect.disabled = false;
+                }
+            } catch (err) {
+                console.error("Erreur chargement spécialités:", err);
+            }
+        });
+
+        // 🔹 Search subjects
+        searchBtn.addEventListener("click", async () => {
+            const examId = examSelect.value;
+            const specialityId = specialitySelect.value;
+
+            if (!examId || !specialityId) {
+                alert("Veuillez choisir un examen et une spécialité");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/subjects.json?exam_id=${examId}&speciality_id=${specialityId}`);
+                const subjects = await res.json();
+
+                if (!subjects.length) {
+                    subjectsList.innerHTML = `<div class="alert alert-info mt-4 text-center">Aucun sujet trouvé.</div>`;
+                    return;
+                }
+
+                subjectsList.innerHTML = `
+        <div class="row g-3 mt-4">
+          ${subjects.map(s => `
+            <div class="col-md-6 col-lg-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-body">
+                  <h5 class="card-title">${s.label}</h5>
+                  <p class="card-text text-muted">${s.description || ''}</p>
+                  <p class="text-muted">Année: ${s.year}</p>
+                  ${s.file_url ?
+                    `<a href="${s.file_url}" target="_blank" class="btn btn-outline-secondary btn-sm">Voir PDF</a>
+                     <a href="${s.file_url}" download class="btn btn-primary btn-sm ms-2">Télécharger</a>` :
+                    `<span class="text-muted">Aucun fichier disponible</span>`}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+            } catch (err) {
+                console.error("Erreur recherche:", err);
+                alert("Une erreur est survenue.");
+            }
+        });
+    });
+</script>
