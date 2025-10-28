@@ -9,7 +9,7 @@
 <!-- Filter Section -->
 <section class="container my-4">
   <div class="row g-3 align-items-end">
-    <div class="col-md-5">
+    <div class="col-md-3">
       <label for="examSelect" class="form-label">Examen</label>
       <select id="examSelect" class="form-select">
         <option value="">-- Sélectionnez un examen --</option>
@@ -19,11 +19,16 @@
       </select>
     </div>
 
-    <div class="col-md-5">
+    <div class="col-md-3">
       <label for="specialitySelect" class="form-label">Spécialité</label>
       <select id="specialitySelect" class="form-select" disabled>
         <option value="">-- Sélectionnez une spécialité --</option>
       </select>
+    </div>
+
+    <div class="col-md-3">
+      <label for="year" class="form-label">Année</label>
+      <input type="number" id="year" class="form-control" placeholder="ex: 2023" min="2000" max="2100">
     </div>
 
     <div class="col-md-2">
@@ -34,37 +39,7 @@
 
 <!-- Subjects Section -->
 <section class="subjects container my-4" id="subjectsList">
-  <% if @subjects.any? %>
-    <div class="row">
-      <% @subjects.each do |subject| %>
-        <div class="col-md-4 mb-4">
-          <div class="card shadow-sm h-100">
-            <div class="card-body">
-              <h5 class="card-title"><%= subject.label %></h5>
-              <p class="card-text text-muted"><%= subject.description %></p>
-
-              <div class="d-flex justify-content-between">
-                <% if subject.file.attached? %>
-                  <%= link_to "Voir le PDF",
-                              rails_blob_path(subject.file, disposition: "inline"),
-                              target: "_blank",
-                              rel: "noopener noreferrer",
-                              class: "btn btn-outline-secondary btn-sm" %>
-                  <%= link_to "Télécharger",
-                              rails_blob_path(subject.file, disposition: "attachment"),
-                              class: "btn btn-primary btn-sm" %>
-                <% else %>
-                  <button class="btn btn-secondary btn-sm w-100" disabled>PDF indisponible</button>
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-      <% end %>
-    </div>
-  <% else %>
-    <p class="text-center text-muted mt-5">Aucun sujet trouvé pour cette sélection.</p>
-  <% end %>
+  <p class="text-center text-muted mt-5">Veuillez sélectionner un examen et une spécialité pour voir les sujets.</p>
 </section>
 
 <!-- Script -->
@@ -72,6 +47,7 @@
     document.addEventListener("DOMContentLoaded", () => {
         const examSelect = document.getElementById("examSelect");
         const specialitySelect = document.getElementById("specialitySelect");
+        const yearInput = document.getElementById("year");
         const searchBtn = document.getElementById("searchBtn");
         const subjectsList = document.getElementById("subjectsList");
 
@@ -98,18 +74,24 @@
             }
         });
 
-        // 🔹 Search subjects
-        searchBtn.addEventListener("click", async () => {
+        // 🔹 Fetch and render subjects (reusable function)
+        async function fetchSubjects() {
             const examId = examSelect.value;
             const specialityId = specialitySelect.value;
+            const year = yearInput.value;
 
             if (!examId || !specialityId) {
-                alert("Veuillez choisir un examen et une spécialité");
+                alert("Veuillez choisir un examen et une spécialité.");
                 return;
             }
 
+            const params = new URLSearchParams();
+            if (examId) params.append("exam_id", examId);
+            if (specialityId) params.append("speciality_id", specialityId);
+            if (year) params.append("year", year);
+
             try {
-                const res = await fetch(`/api/subjects.json?exam_id=${examId}&speciality_id=${specialityId}`);
+                const res = await fetch(`/api/subjects.json?${params.toString()}`);
                 const subjects = await res.json();
 
                 if (!subjects.length) {
@@ -124,8 +106,8 @@
               <div class="card shadow-sm h-100">
                 <div class="card-body">
                   <h5 class="card-title">${s.label}</h5>
-                  <p class="card-text text-muted">${s.description || ''}</p>
-                  <p class="text-muted">Année: ${s.year}</p>
+                  <p class="card-text text-muted">${s.description || 'Aucune description.'}</p>
+                  <p class="text-muted"><strong>Année:</strong> ${s.year || 'Non spécifiée'}</p>
                   ${s.file_url ?
                     `<a href="${s.file_url}" target="_blank" class="btn btn-outline-secondary btn-sm">Voir PDF</a>
                      <a href="${s.file_url}" download class="btn btn-primary btn-sm ms-2">Télécharger</a>` :
@@ -140,6 +122,12 @@
                 console.error("Erreur recherche:", err);
                 alert("Une erreur est survenue.");
             }
-        });
+        }
+
+        // 🔹 Trigger search when button is clicked
+        searchBtn.addEventListener("click", fetchSubjects);
+
+        // 🔹 Also re-fetch when year changes (optional UX improvement)
+        yearInput.addEventListener("change", fetchSubjects);
     });
 </script>

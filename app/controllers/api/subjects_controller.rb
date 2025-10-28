@@ -17,6 +17,11 @@ module Api
                            .where(specialities: { exam_id: params[:exam_id] })
       end
 
+      # ✅ New: Filter by year
+      if params[:year].present?
+        subjects = subjects.where(year: params[:year].to_i)
+      end
+
       subjects = subjects.distinct
 
       render json: subjects.map { |s|
