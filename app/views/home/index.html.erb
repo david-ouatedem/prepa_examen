@@ -6,128 +6,51 @@
   </p>
 </section>
 
-<!-- Filter Section -->
-<section class="container my-4">
-  <div class="row g-3 align-items-end">
-    <div class="col-md-3">
-      <label for="examSelect" class="form-label">Examen</label>
-      <select id="examSelect" class="form-select">
-        <option value="">-- Sélectionnez un examen --</option>
-        <% @exams.each do |exam| %>
-          <option value="<%= exam.id %>"><%= exam.label %></option>
-        <% end %>
-      </select>
-    </div>
+<section data-controller="subjects">
+  <div class="container my-4">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label for="examSelect" class="form-label">Examen</label>
+        <select
+          id="examSelect"
+          class="form-select"
+          data-subjects-target="exam"
+          data-action="change->subjects#loadSpecialities">
+          <option value="">-- Sélectionnez un examen --</option>
+          <% @exams.each do |exam| %>
+            <option value="<%= exam.id %>"><%= exam.label %></option>
+          <% end %>
+        </select>
+      </div>
 
-    <div class="col-md-3">
-      <label for="specialitySelect" class="form-label">Spécialité</label>
-      <select id="specialitySelect" class="form-select" disabled>
-        <option value="">-- Sélectionnez une spécialité --</option>
-      </select>
-    </div>
+      <div class="col-md-3">
+        <label for="specialitySelect" class="form-label">Spécialité</label>
+        <select id="specialitySelect" class="form-select" data-subjects-target="speciality">
+          <option value="">-- Sélectionnez une spécialité --</option>
+        </select>
+      </div>
 
-    <div class="col-md-3">
-      <label for="year" class="form-label">Année</label>
-      <input type="number" id="year" class="form-control" placeholder="ex: 2023" min="2000" max="2100">
-    </div>
+      <div class="col-md-3">
+        <label for="year" class="form-label">Année</label>
+        <input
+          type="number"
+          id="year"
+          class="form-control"
+          placeholder="ex: 2023"
+          min="2000"
+          max="2100"
+          data-subjects-target="year">
+      </div>
 
-    <div class="col-md-2">
-      <button id="searchBtn" class="btn btn-primary w-100">Rechercher</button>
+      <div class="col-md-2">
+        <button data-action="click->subjects#fetchSubjects" class="btn btn-primary w-100">
+          Rechercher
+        </button>
+      </div>
     </div>
   </div>
+
+  <section class="subjects container my-4" data-subjects-target="list">
+    <p class="text-center text-muted mt-5">Veuillez sélectionner un examen et une spécialité pour voir les sujets.</p>
+  </section>
 </section>
-
-<!-- Subjects Section -->
-<section class="subjects container my-4" id="subjectsList">
-  <p class="text-center text-muted mt-5">Veuillez sélectionner un examen et une spécialité pour voir les sujets.</p>
-</section>
-
-<!-- Script -->
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const examSelect = document.getElementById("examSelect");
-        const specialitySelect = document.getElementById("specialitySelect");
-        const yearInput = document.getElementById("year");
-        const searchBtn = document.getElementById("searchBtn");
-        const subjectsList = document.getElementById("subjectsList");
-
-        // 🔹 Load specialities dynamically when exam changes
-        examSelect.addEventListener("change", async () => {
-            const examId = examSelect.value;
-            specialitySelect.innerHTML = '<option value="">-- Choisir une spécialité --</option>';
-            specialitySelect.disabled = true;
-
-            if (!examId) return;
-
-            try {
-                const res = await fetch(`/api/specialities.json?exam_id=${examId}`);
-                const data = await res.json();
-
-                if (data.length) {
-                    data.forEach(s => {
-                        specialitySelect.innerHTML += `<option value="${s.id}">${s.label}</option>`;
-                    });
-                    specialitySelect.disabled = false;
-                }
-            } catch (err) {
-                console.error("Erreur chargement spécialités:", err);
-            }
-        });
-
-        // 🔹 Fetch and render subjects (reusable function)
-        async function fetchSubjects() {
-            const examId = examSelect.value;
-            const specialityId = specialitySelect.value;
-            const year = yearInput.value;
-
-            if (!examId || !specialityId) {
-                alert("Veuillez choisir un examen et une spécialité.");
-                return;
-            }
-
-            const params = new URLSearchParams();
-            if (examId) params.append("exam_id", examId);
-            if (specialityId) params.append("speciality_id", specialityId);
-            if (year) params.append("year", year);
-
-            try {
-                const res = await fetch(`/api/subjects.json?${params.toString()}`);
-                const subjects = await res.json();
-
-                if (!subjects.length) {
-                    subjectsList.innerHTML = `<div class="alert alert-info mt-4 text-center">Aucun sujet trouvé.</div>`;
-                    return;
-                }
-
-                subjectsList.innerHTML = `
-        <div class="row g-3 mt-4">
-          ${subjects.map(s => `
-            <div class="col-md-6 col-lg-4">
-              <div class="card shadow-sm h-100">
-                <div class="card-body">
-                  <h5 class="card-title">${s.label}</h5>
-                  <p class="card-text text-muted">${s.description || 'Aucune description.'}</p>
-                  <p class="text-muted"><strong>Année:</strong> ${s.year || 'Non spécifiée'}</p>
-                  ${s.file_url ?
-                    `<a href="${s.file_url}" target="_blank" class="btn btn-outline-secondary btn-sm">Voir PDF</a>
-                     <a href="${s.file_url}" download class="btn btn-primary btn-sm ms-2">Télécharger</a>` :
-                    `<span class="text-muted">Aucun fichier disponible</span>`}
-                </div>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-            } catch (err) {
-                console.error("Erreur recherche:", err);
-                alert("Une erreur est survenue.");
-            }
-        }
-
-        // 🔹 Trigger search when button is clicked
-        searchBtn.addEventListener("click", fetchSubjects);
-
-        // 🔹 Also re-fetch when year changes (optional UX improvement)
-        yearInput.addEventListener("change", fetchSubjects);
-    });
-</script>

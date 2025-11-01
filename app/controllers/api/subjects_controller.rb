@@ -3,34 +3,18 @@ module Api
     include Rails.application.routes.url_helpers
 
     def index
-      subjects = Subject.all
+      subjects = Subject.filter(params)
 
-      # Filter by speciality if provided
-      if params[:speciality_id].present?
-        subjects = subjects.joins(:specialities)
-                           .where(specialities: { id: params[:speciality_id] })
-      end
+      # Mark the response to verify the executing controller/action and disable stale caches
+      response.set_header "X-Api-Subjects", "v2"
 
-      # Filter by exam if provided
-      if params[:exam_id].present?
-        subjects = subjects.joins(:specialities)
-                           .where(specialities: { exam_id: params[:exam_id] })
-      end
-
-      # ✅ New: Filter by year
-      if params[:year].present?
-        subjects = subjects.where(year: params[:year].to_i)
-      end
-
-      subjects = subjects.distinct
-
-      render json: subjects.map { |s|
+      render json: subjects.map { |subject|
         {
-          id: s.id,
-          label: s.label,
-          description: s.description,
-          year: s.year,
-          file_url: s.file.attached? ? rails_blob_url(s.file, host: request.base_url) : nil
+          id: subject.id,
+          label: subject.label,
+          description: subject.description,
+          year: subject.year,
+          file_url: subject.file.attached? ? rails_blob_url(subject.file, host: request.base_url) : nil
         }
       }
     rescue => e
