@@ -7,9 +7,11 @@
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <%= link_to "Admin", admin_exams_path, class:"nav-link" %>
-        </li>
+        <% if user_signed_in? %>
+          <li class="nav-item">
+            <%= link_to "Admin", admin_exams_path, class:"nav-link" %>
+          </li>
+        <% end %>
       </ul>
 
       <div class="d-flex align-items-center gap-3">
@@ -24,9 +26,27 @@
           </ul>
         </div>
 
-        <!-- Auth buttons -->
-        <button class="btn btn-outline-success" type="button">Login</button>
-        <button class="btn btn-success" type="button">Register</button>
+        <!-- Auth section -->
+        <% if user_signed_in? %>
+          <!-- User avatar dropdown -->
+          <div class="dropdown">
+            <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: bold;">
+                <%= current_user.email[0].upcase %>
+              </div>
+              <span><%= current_user.email %></span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <li><%= link_to "Edit Profile", edit_user_registration_path, class: "dropdown-item" %></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><%= link_to "Sign Out", destroy_user_session_path, data: { turbo_method: :delete }, class: "dropdown-item text-danger" %></li>
+            </ul>
+          </div>
+        <% else %>
+          <!-- Guest buttons -->
+          <%= link_to "Login", new_user_session_path, class:"btn btn-outline-success" %>
+          <%= link_to "Register", new_user_registration_path, class:"btn btn-success" %>
+        <% end %>
       </div>
     </div>
   </div>

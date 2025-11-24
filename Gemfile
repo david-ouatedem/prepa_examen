@@ -11,6 +11,7 @@ gem "jbuilder"
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 gem "solid_cache"
 gem "solid_queue"
+gem 'devise', '~> 4.9', '>= 4.9.4'
 gem "solid_cable"
 gem "active_storage_validations"
 gem "bootsnap", require: false
