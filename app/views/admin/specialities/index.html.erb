@@ -49,7 +49,7 @@
                       <i class="bi bi-pencil"></i> <%= t('specialities.edit') %>
                     </button>
                     <button type="button" class="btn btn-outline-danger btn-sm"
-                            onclick="confirmDelete('<%= speciality.id %>', '<%= j speciality.label %>')">
+                            onclick="confirmDeleteSpeciality('<%= speciality.id %>', '<%= j speciality.label %>')">
                       <i class="bi bi-trash"></i> <%= t('specialities.delete') %>
                     </button>
                   </div>
@@ -75,7 +75,7 @@
 <div class="modal fade" id="specialityModal" tabindex="-1" aria-labelledby="specialityModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form id="specialityForm" onsubmit="handleSubmit(event)">
+      <form id="specialityForm" onsubmit="handleSpecialitySubmit(event)">
         <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
         <div class="modal-header">
           <h5 class="modal-title" id="specialityModalLabel"><%= t('specialities.new_speciality') %></h5>
@@ -169,7 +169,7 @@
         document.getElementById('specialityErrors').classList.add('d-none');
     }
 
-    function handleSubmit(event) {
+    function handleSpecialitySubmit(event) {
         event.preventDefault();
 
         const form = document.getElementById('specialityForm');
@@ -218,7 +218,7 @@
             });
     }
 
-    function confirmDelete(id, label) {
+    function confirmDeleteSpeciality(id, label) {
         currentDeleteId = id;
         document.getElementById('deleteSpecialityLabel').textContent = label;
         deleteModalInstance.show();
