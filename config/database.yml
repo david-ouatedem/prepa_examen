@@ -6,6 +6,10 @@ default: &default
 development:
   <<: *default
   database: prepa_examen_development
+  host: <%= ENV.fetch("PGHOST", "localhost") %>
+  username: <%= ENV["PGUSER"] %>
+  password: <%= ENV["PGPASSWORD"] %>
+  port: 5432
 test:
   <<: *default
   database: prepa_examen_test

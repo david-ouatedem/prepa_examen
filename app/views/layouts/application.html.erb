@@ -28,7 +28,10 @@
     <%= javascript_importmap_tags %>
   </head>
   <body>
-    <%= render "home/header" %>
+  <%= render "home/header" %>
+
+  <p class="notice"><%= notice %></p>
+  <p class="alert"><%= alert %></p>
 
     <% if @admin_area %>
       <div class="container-fluid my-4">
