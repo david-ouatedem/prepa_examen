@@ -1,11 +1,17 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+math_bac:
+  id: aaaa0000-0000-0000-0000-000000000001
+  label: Mathématiques
+  description: Mathematics speciality
+  exam: bac
 
-one:
-  label: MyString
-  description: MyText
-  exam: one
+physics_bac:
+  id: aaaa0000-0000-0000-0000-000000000002
+  label: Physique
+  description: Physics speciality
+  exam: bac
 
-two:
-  label: MyString
-  description: MyText
-  exam: two
+info_bts:
+  id: aaaa0000-0000-0000-0000-000000000003
+  label: Informatique
+  description: Computer science
+  exam: bts

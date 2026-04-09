@@ -2,44 +2,52 @@ require "application_system_test_case"
 
 class SpecialitiesTest < ApplicationSystemTestCase
   setup do
-    @speciality = specialities(:one)
+    @admin = users(:admin_user)
   end
 
-  test "visiting the index" do
-    visit specialities_url
-    assert_selector "h1", text: "Specialities"
+  test "unauthenticated visit redirects to sign in" do
+    visit admin_specialities_url
+    assert_current_path new_user_session_path
   end
 
-  test "should create speciality" do
-    visit specialities_url
-    click_on "New speciality"
-
-    fill_in "Description", with: @speciality.description
-    fill_in "Exam", with: @speciality.exam_id
-    fill_in "Label", with: @speciality.label
-    click_on "Create Speciality"
-
-    assert_text "Speciality was successfully created"
-    click_on "Back"
+  test "admin can visit specialities index" do
+    sign_in @admin
+    visit admin_specialities_url
+    assert_selector "h1", text: "Specialities Management"
+    assert_text specialities(:math_bac).label
+    assert_text specialities(:info_bts).label
   end
 
-  test "should update Speciality" do
-    visit speciality_url(@speciality)
-    click_on "Edit this speciality", match: :first
-
-    fill_in "Description", with: @speciality.description
-    fill_in "Exam", with: @speciality.exam_id
-    fill_in "Label", with: @speciality.label
-    click_on "Update Speciality"
-
-    assert_text "Speciality was successfully updated"
-    click_on "Back"
+  test "specialities index shows exam column" do
+    sign_in @admin
+    visit admin_specialities_url
+    assert_text exams(:bac).label
+    assert_text exams(:bts).label
   end
 
-  test "should destroy Speciality" do
-    visit speciality_url(@speciality)
-    click_on "Destroy this speciality", match: :first
+  test "admin can create speciality via modal" do
+    sign_in @admin
+    visit admin_specialities_url
 
-    assert_text "Speciality was successfully destroyed"
+    click_button "New Speciality"
+    within "#specialityModal" do
+      fill_in "speciality[label]", with: "Chimie"
+      select exams(:bac).label, from: "speciality[exam_id]"
+      click_button "Save Speciality"
+    end
+
+    assert_text "Chimie"
+  end
+
+  test "creating speciality without exam shows error in modal" do
+    sign_in @admin
+    visit admin_specialities_url
+
+    click_button "New Speciality"
+    within "#specialityModal" do
+      fill_in "speciality[label]", with: "No Exam"
+      click_button "Save Speciality"
+      assert_selector "#specialityErrors", visible: true
+    end
   end
 end

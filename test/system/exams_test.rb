@@ -2,42 +2,80 @@ require "application_system_test_case"
 
 class ExamsTest < ApplicationSystemTestCase
   setup do
-    @exam = exams(:one)
+    @admin = users(:admin_user)
   end
 
-  test "visiting the index" do
-    visit exams_url
-    assert_selector "h1", text: "Exams"
+  test "unauthenticated visit redirects to sign in" do
+    visit admin_exams_url
+    assert_current_path new_user_session_path
   end
 
-  test "should create exam" do
-    visit exams_url
-    click_on "New exam"
-
-    fill_in "Description", with: @exam.description
-    fill_in "Label", with: @exam.label
-    click_on "Create Exam"
-
-    assert_text "Exam was successfully created"
-    click_on "Back"
+  test "admin can visit exams index" do
+    sign_in @admin
+    visit admin_exams_url
+    assert_selector "h1", text: "Exams Management"
+    assert_selector "table#examsTable"
+    assert_text exams(:bac).label
+    assert_text exams(:bts).label
   end
 
-  test "should update Exam" do
-    visit exam_url(@exam)
-    click_on "Edit this exam", match: :first
+  test "admin can create exam via modal" do
+    sign_in @admin
+    visit admin_exams_url
 
-    fill_in "Description", with: @exam.description
-    fill_in "Label", with: @exam.label
-    click_on "Update Exam"
+    click_button "New Exam"
+    within "#examModal" do
+      fill_in "exam[label]", with: "Licence"
+      fill_in "exam[description]", with: "University degree exam"
+      click_button "Save Exam"
+    end
 
-    assert_text "Exam was successfully updated"
-    click_on "Back"
+    assert_text "Licence"
   end
 
-  test "should destroy Exam" do
-    visit exam_url(@exam)
-    click_on "Destroy this exam", match: :first
+  test "creating exam with blank label shows error in modal" do
+    sign_in @admin
+    visit admin_exams_url
 
-    assert_text "Exam was successfully destroyed"
+    click_button "New Exam"
+    within "#examModal" do
+      fill_in "exam[label]", with: ""
+      click_button "Save Exam"
+      assert_selector "#examErrors", visible: true
+    end
+
+    assert_equal Subject.count, Subject.count
+  end
+
+  test "admin can edit exam via modal" do
+    sign_in @admin
+    visit admin_exams_url
+
+    find("button[data-exam-label='#{exams(:bts).label}']").click
+    within "#examModal" do
+      fill_in "exam[label]", with: "BTS Updated"
+      click_button "Save Exam"
+    end
+
+    assert_text "BTS Updated"
+    assert_no_text exams(:bts).label
+  end
+
+  test "admin can delete exam via confirmation modal" do
+    sign_in @admin
+    visit admin_exams_url
+
+    find("button[onclick*=\"confirmDelete('#{exams(:bts).id}\"]").click
+    within "#deleteModal" do
+      click_button "Delete"
+    end
+
+    assert_no_text exams(:bts).label
+  end
+
+  test "regular user cannot access admin exams" do
+    sign_in users(:regular_user)
+    visit admin_exams_url
+    assert_current_path root_path
   end
 end

@@ -1,48 +1,103 @@
 require "test_helper"
 
-class SpecialitiesControllerTest < ActionDispatch::IntegrationTest
-  setup do
-    @speciality = specialities(:one)
+class Admin::SpecialitiesControllerTest < ActionDispatch::IntegrationTest
+  # Unauthenticated access
+
+  test "GET index redirects unauthenticated user to sign in" do
+    get admin_specialities_url
+    assert_redirected_to new_user_session_path
   end
 
-  test "should get index" do
-    get specialities_url
+  # Regular user access
+
+  test "GET index redirects regular user to root with alert" do
+    sign_in users(:regular_user)
+    get admin_specialities_url
+    assert_redirected_to root_path
+    assert_equal "You are not authorized to access this area.", flash[:alert]
+  end
+
+  # Admin access
+
+  test "GET index returns success and assigns exams and specialities" do
+    sign_in users(:admin_user)
+    get admin_specialities_url
     assert_response :success
+    assert_not_nil assigns(:specialities)
+    assert_not_nil assigns(:exams)
   end
 
-  test "should get new" do
-    get new_speciality_url
-    assert_response :success
-  end
-
-  test "should create speciality" do
-    assert_difference("Speciality.count") do
-      post specialities_url, params: { speciality: { description: @speciality.description, exam_id: @speciality.exam_id, label: @speciality.label } }
+  test "POST create with valid params redirects to index" do
+    sign_in users(:admin_user)
+    assert_difference "Speciality.count", 1 do
+      post admin_specialities_url, params: {
+        speciality: { label: "Chimie", exam_id: exams(:bac).id }
+      }
     end
-
-    assert_redirected_to speciality_url(Speciality.last)
+    assert_redirected_to admin_specialities_path
+    assert_equal "Speciality was successfully created.", flash[:notice]
   end
 
-  test "should show speciality" do
-    get speciality_url(@speciality)
-    assert_response :success
+  test "POST create with valid params JSON returns created speciality" do
+    sign_in users(:admin_user)
+    post admin_specialities_url, params: {
+      speciality: { label: "Chimie JSON", exam_id: exams(:bac).id }
+    }, as: :json
+    assert_response :created
+    json = JSON.parse(response.body)
+    assert_equal "Chimie JSON", json["label"]
   end
 
-  test "should get edit" do
-    get edit_speciality_url(@speciality)
-    assert_response :success
+  test "POST create without exam_id returns unprocessable_entity" do
+    sign_in users(:admin_user)
+    post admin_specialities_url, params: {
+      speciality: { label: "No Exam" }
+    }, as: :json
+    assert_response :unprocessable_entity
+    json = JSON.parse(response.body)
+    assert json["errors"]["exam"].present?
   end
 
-  test "should update speciality" do
-    patch speciality_url(@speciality), params: { speciality: { description: @speciality.description, exam_id: @speciality.exam_id, label: @speciality.label } }
-    assert_redirected_to speciality_url(@speciality)
+  test "POST create without label returns unprocessable_entity" do
+    sign_in users(:admin_user)
+    post admin_specialities_url, params: {
+      speciality: { exam_id: exams(:bac).id }
+    }, as: :json
+    assert_response :unprocessable_entity
   end
 
-  test "should destroy speciality" do
-    assert_difference("Speciality.count", -1) do
-      delete speciality_url(@speciality)
+  test "PATCH update with valid params redirects to index" do
+    sign_in users(:admin_user)
+    patch admin_speciality_url(specialities(:math_bac)), params: {
+      speciality: { label: "Updated Math" }
+    }
+    assert_redirected_to admin_specialities_path
+    assert_equal "Updated Math", specialities(:math_bac).reload.label
+  end
+
+  test "PATCH update JSON returns updated speciality" do
+    sign_in users(:admin_user)
+    patch admin_speciality_url(specialities(:math_bac)), params: {
+      speciality: { label: "Updated JSON" }
+    }, as: :json
+    assert_response :ok
+    json = JSON.parse(response.body)
+    assert_equal "Updated JSON", json["label"]
+  end
+
+  test "DELETE destroy redirects to index" do
+    sign_in users(:admin_user)
+    assert_difference "Speciality.count", -1 do
+      delete admin_speciality_url(specialities(:info_bts))
     end
+    assert_redirected_to admin_specialities_path
+    assert_equal "Speciality was successfully destroyed.", flash[:notice]
+  end
 
-    assert_redirected_to specialities_url
+  test "DELETE destroy JSON returns no_content" do
+    sign_in users(:admin_user)
+    delete admin_speciality_url(specialities(:info_bts)), as: :json
+    assert_response :no_content
+    assert_raises(ActiveRecord::RecordNotFound) { specialities(:info_bts).reload }
   end
 end

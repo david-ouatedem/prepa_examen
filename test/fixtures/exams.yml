@@ -1,9 +1,9 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+bac:
+  id: 11111111-1111-1111-1111-111111111111
+  label: Baccalauréat
+  description: National high school diploma exam
 
-one:
-  label: MyString
-  description: MyString
-
-two:
-  label: MyString
-  description: MyString
+bts:
+  id: 22222222-2222-2222-2222-222222222222
+  label: BTS
+  description: Higher technician certificate
