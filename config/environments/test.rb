@@ -42,6 +42,9 @@ Rails.application.configure do
   # Print deprecation notices to the stderr.
   config.active_support.deprecation = :stderr
 
+  # Use English in tests so assertions match English text in system/integration tests.
+  config.i18n.default_locale = :en
+
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true
 
