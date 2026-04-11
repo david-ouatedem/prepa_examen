@@ -11,13 +11,13 @@ gem "jbuilder"
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 gem "solid_cache"
 gem "solid_queue"
-gem 'devise', '~> 4.9', '>= 4.9.4'
+gem "devise", "~> 4.9", ">= 4.9.4"
 gem "solid_cable"
 gem "active_storage_validations"
 gem "bootsnap", require: false
 gem "kamal", require: false
 gem "thruster", require: false
-gem 'dotenv-rails', groups: [:development, :test]
+gem "dotenv-rails", groups: [ :development, :test ]
 
 group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
@@ -34,4 +34,6 @@ end
 group :test do
   gem "capybara"
   gem "selenium-webdriver"
+  gem "rails-controller-testing"
+  gem "simplecov", require: false
 end

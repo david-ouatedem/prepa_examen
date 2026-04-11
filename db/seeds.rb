@@ -132,7 +132,7 @@ end
 puts "\n=== Creating Subjects (Exam Papers) ==="
 
 # Create subjects for each speciality
-years = [2020, 2021, 2022, 2023, 2024]
+years = [ 2020, 2021, 2022, 2023, 2024 ]
 subjects_created = 0
 
 specialities.each do |exam_label, specs|

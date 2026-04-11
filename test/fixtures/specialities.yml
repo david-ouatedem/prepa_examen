@@ -2,16 +2,16 @@ math_bac:
   id: aaaa0000-0000-0000-0000-000000000001
   label: Mathématiques
   description: Mathematics speciality
-  exam: bac
+  exam_id: 11111111-1111-1111-1111-111111111111
 
 physics_bac:
   id: aaaa0000-0000-0000-0000-000000000002
   label: Physique
   description: Physics speciality
-  exam: bac
+  exam_id: 11111111-1111-1111-1111-111111111111
 
 info_bts:
   id: aaaa0000-0000-0000-0000-000000000003
   label: Informatique
   description: Computer science
-  exam: bts
+  exam_id: 22222222-2222-2222-2222-222222222222

@@ -8,9 +8,9 @@ Rails.application.routes.draw do
     root to: "exams#index"
   end
   namespace :api do
-    resources :specialities, only: [:index]
-    resources :subjects, only: [:index]
+    resources :specialities, only: [ :index ]
+    resources :subjects, only: [ :index ]
   end
   get "up" => "rails/health#show", as: :rails_health_check
-  get 'locale/:locale', to: 'locale#switch', as: :switch_locale
+  get "locale/:locale", to: "locale#switch", as: :switch_locale
 end

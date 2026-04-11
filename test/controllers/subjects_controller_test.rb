@@ -52,7 +52,7 @@ class Admin::SubjectsControllerTest < ActionDispatch::IntegrationTest
       }
     }, as: :json
     assert_response :created
-    subject = Subject.last
+    subject = Subject.order(created_at: :desc).first
     assert_equal 2, subject.specialities.count
   end
 
@@ -64,15 +64,15 @@ class Admin::SubjectsControllerTest < ActionDispatch::IntegrationTest
         subject: { label: "Subject with PDF", year: 2024, file: pdf }
       }
     end
-    assert Subject.last.file.attached?
+    assert Subject.order(created_at: :desc).first.file.attached?
   end
 
   test "POST create with non-PDF returns unprocessable_entity" do
     sign_in users(:admin_user)
-    fake_png = fixture_file_upload("sample.pdf", "image/png")
+    txt_file = fixture_file_upload("sample.txt", "text/plain")
     post admin_subjects_url, params: {
-      subject: { label: "Bad file", year: 2024, file: fake_png }
-    }, as: :json
+      subject: { label: "Bad file", year: 2024, file: txt_file }
+    }, headers: { "Accept" => "application/json" }
     assert_response :unprocessable_entity
   end
 

@@ -10,7 +10,7 @@ module PrepaExamen
     config.autoload_lib(ignore: %w[assets tasks])
 
     config.i18n.default_locale = :fr
-    config.i18n.available_locales = [:en, :fr]
+    config.i18n.available_locales = [ :en, :fr ]
 
     config.generators do |g|
       g.orm :active_record, primary_key_type: :uuid

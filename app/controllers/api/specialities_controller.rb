@@ -3,9 +3,9 @@ module Api
     def index
       @specialities = if params[:exam_id].present?
                         Speciality.where(exam_id: params[:exam_id])
-                      else
+      else
                         Speciality.all
-                      end
+      end
       render json: @specialities.select(:id, :label)
     end
   end
