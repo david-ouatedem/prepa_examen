@@ -260,10 +260,19 @@
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                if (error && error.errors) {
+                    const errorsList = document.getElementById('subjectErrorsList');
+                    errorsList.innerHTML = '';
+                    Object.values(error.errors).flat().forEach(err => {
+                        errorsList.innerHTML += `<li>${err}</li>`;
+                    });
+                    document.getElementById('subjectErrors').classList.remove('d-none');
+                } else {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                }
                 submitBtn.disabled = false;
-                submitBtn.textContent = '<%= t('subjects.save') %>';
+                submitBtn.textContent = '<%= t("subjects.save") %>';
             });
     }
 

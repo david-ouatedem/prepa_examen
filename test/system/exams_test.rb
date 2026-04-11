@@ -53,11 +53,11 @@ class ExamsTest < ApplicationSystemTestCase
 
     find("button[data-exam-label='#{exams(:bts).label}']").click
     within "#examModal" do
-      fill_in "exam[label]", with: "BTS Updated"
+      fill_in "exam[label]", with: "Updated Certificate"
       click_button "Save Exam"
     end
 
-    assert_text "BTS Updated"
+    assert_text "Updated Certificate"
     assert_no_text exams(:bts).label
   end
 
